@@ -32,7 +32,6 @@ import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import lombok.AccessLevel;
 import lombok.Setter;
-import org.hl7.fhir.convertors.conv30_40.OperationOutcome30_40;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.OperationOutcome;
 import org.hl7.fhir.dstu3.model.Resource;
@@ -90,14 +89,6 @@ public class TaskFhirResourceProvider implements IResourceProvider {
 		return FhirProviderUtils.buildUpdate(fhirTaskService.update(id.getIdPart(), TaskVersionConverter.convertTask(task)));
 	}
 	
-	@Search
-	public IBundleProvider searchTasks(
-	        @OptionalParam(name = Task.SP_BASED_ON, chainWhitelist = { "" }) ReferenceAndListParam basedOnReference,
-	        @OptionalParam(name = Task.SP_OWNER, chainWhitelist = { "" }) ReferenceAndListParam ownerReference,
-	        @OptionalParam(name = Task.SP_STATUS) TokenAndListParam status, @Sort SortSpec sort) {
-		return fhirTaskService.searchForTasks(basedOnReference, ownerReference, status, sort);
-	}
-	
 	@Delete
 	public OperationOutcome deleteTask(@IdParam IdType id) {
 		org.hl7.fhir.r4.model.Task task = fhirTaskService.delete(id.getIdPart());
@@ -105,6 +96,14 @@ public class TaskFhirResourceProvider implements IResourceProvider {
 			throw new ResourceNotFoundException("Could not find task resource with id " + id.getIdPart() + "to delete");
 		}
 		
-		return OperationOutcome30_40.convertOperationOutcome(FhirProviderUtils.buildDelete(task));
+		return FhirProviderUtils.buildDelete(TaskVersionConverter.convertTask(task));
+	}
+	
+	@Search
+	public IBundleProvider searchTasks(
+	        @OptionalParam(name = Task.SP_BASED_ON, chainWhitelist = { "" }) ReferenceAndListParam basedOnReference,
+	        @OptionalParam(name = Task.SP_OWNER, chainWhitelist = { "" }) ReferenceAndListParam ownerReference,
+	        @OptionalParam(name = Task.SP_STATUS) TokenAndListParam status, @Sort SortSpec sort) {
+		return fhirTaskService.searchForTasks(basedOnReference, ownerReference, status, sort);
 	}
 }
